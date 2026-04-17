@@ -35,60 +35,6 @@ if (!isset($_SESSION['user_id'])) {
             <button id="create-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create Product</button>
         </div>
 
-        <section class="bg-white shadow-md rounded my-6 p-6">
-            <div class="flex items-center justify-between mb-4">
-                <h2 class="text-2xl font-bold">Analytics Dashboard</h2>
-                <span id="analytics-db-badge" class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded">Loading...</span>
-            </div>
-            <div id="analytics-warning" class="hidden mb-4 text-sm text-yellow-700 bg-yellow-50 border border-yellow-200 rounded p-3"></div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                <div class="bg-gray-50 rounded p-4 border">
-                    <p class="text-sm text-gray-500">Users</p>
-                    <p id="summary-users" class="text-2xl font-bold">0</p>
-                </div>
-                <div class="bg-gray-50 rounded p-4 border">
-                    <p class="text-sm text-gray-500">Products</p>
-                    <p id="summary-products" class="text-2xl font-bold">0</p>
-                </div>
-                <div class="bg-gray-50 rounded p-4 border">
-                    <p class="text-sm text-gray-500">Orders</p>
-                    <p id="summary-orders" class="text-2xl font-bold">0</p>
-                </div>
-                <div class="bg-gray-50 rounded p-4 border">
-                    <p class="text-sm text-gray-500">Total Revenue</p>
-                    <p id="summary-revenue" class="text-2xl font-bold">0.00</p>
-                </div>
-            </div>
-
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="bg-white border rounded p-4 h-80">
-                    <h3 class="font-semibold mb-3">Revenue (Last 6 Months)</h3>
-                    <div class="relative h-64">
-                        <canvas id="monthlyRevenueChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white border rounded p-4 h-80">
-                    <h3 class="font-semibold mb-3">Order Status Distribution</h3>
-                    <div class="relative h-64">
-                        <canvas id="orderStatusChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white border rounded p-4 h-80">
-                    <h3 class="font-semibold mb-3">Top Categories by Sales</h3>
-                    <div class="relative h-64">
-                        <canvas id="topCategoriesChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white border rounded p-4 h-80">
-                    <h3 class="font-semibold mb-3">Payment Method Share</h3>
-                    <div class="relative h-64">
-                        <canvas id="paymentMethodsChart" class="w-full h-full"></canvas>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <div id="app" class="bg-white shadow-md rounded my-6">
             <!-- Product management will be rendered here -->
         </div>
@@ -116,8 +62,6 @@ if (!isset($_SESSION['user_id'])) {
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/zod@3/lib/index.umd.min.js"></script>
     <script src="js/app.js?v=20260410"></script>
 </body>
 </html>

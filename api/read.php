@@ -8,9 +8,9 @@ require_once '../config/database.php';
 
 try {
 	$stmt = $pdo->prepare(
-		"SELECT id, productCode, productName, price, deleted_at
+		"SELECT id, productCode, productName, price
 		 FROM products
-		 WHERE deleted_at IS NULL
+		 WHERE is_deleted = 0
 		 ORDER BY id DESC"
 	);
 	$stmt->execute();

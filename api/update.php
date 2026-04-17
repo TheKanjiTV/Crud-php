@@ -51,7 +51,7 @@ try {
 	$exists = $pdo->prepare(
 		"SELECT id
 		 FROM products
-		 WHERE id = :id AND deleted_at IS NULL"
+		 WHERE id = :id AND is_deleted = 0"
 	);
 	$exists->execute(['id' => $id]);
 	if (!$exists->fetch()) {
@@ -64,7 +64,7 @@ try {
 		"UPDATE products
 		 SET productName = :productName,
 			 price = :price
-		 WHERE id = :id AND deleted_at IS NULL"
+		 WHERE id = :id AND is_deleted = 0"
 	);
 	$stmt->execute([
 		'id' => $id,

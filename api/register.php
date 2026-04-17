@@ -53,7 +53,7 @@ if (!is_array($data) || $data === []) {
 
 $username = trim((string)($data['username'] ?? ''));
 $passwordRaw = (string)($data['password'] ?? '');
-$role = (string)($data['role'] ?? 'guest');
+$role = 'user';
 
 if ($username === '') {
 	http_response_code(422);
@@ -64,13 +64,6 @@ if ($username === '') {
 if (strlen($passwordRaw) < 6) {
 	http_response_code(422);
 	echo json_encode(['message' => 'Password must be at least 6 characters.']);
-	exit;
-}
-
-$allowedRoles = ['admin', 'user', 'guest'];
-if (!in_array($role, $allowedRoles, true)) {
-	http_response_code(422);
-	echo json_encode(['message' => 'Invalid role selected.']);
 	exit;
 }
 

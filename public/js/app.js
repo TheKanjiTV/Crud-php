@@ -20,25 +20,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const productNameInput = document.getElementById('productName');
     const priceInput = document.getElementById('price');
 
-    const summaryUsers = document.getElementById('summary-users');
-    const summaryProducts = document.getElementById('summary-products');
-    const summaryOrders = document.getElementById('summary-orders');
-    const summaryRevenue = document.getElementById('summary-revenue');
-    const analyticsWarning = document.getElementById('analytics-warning');
-    const analyticsDbBadge = document.getElementById('analytics-db-badge');
-
-    const monthlyRevenueCanvas = document.getElementById('monthlyRevenueChart');
-    const orderStatusCanvas = document.getElementById('orderStatusChart');
-    const topCategoriesCanvas = document.getElementById('topCategoriesChart');
-    const paymentMethodsCanvas = document.getElementById('paymentMethodsChart');
-
-    const charts = {
-        monthlyRevenue: null,
-        orderStatus: null,
-        topCategories: null,
-        paymentMethods: null
-    };
-
     const hasZod = typeof z !== 'undefined' && z && typeof z.object === 'function';
     const productSchema = hasZod
         ? z.object({
@@ -113,141 +94,8 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
-    function destroyChart(chartRefKey) {
-        if (charts[chartRefKey]) {
-            charts[chartRefKey].destroy();
-            charts[chartRefKey] = null;
-        }
-    }
-
-    function renderAnalyticsChart(canvasEl, chartRefKey, chartType, labels, values, chartLabel, colors) {
-        if (!canvasEl || typeof Chart === 'undefined') {
-            return;
-        }
-
-        const numericValues = Array.isArray(values) ? values.map(v => Number(v) || 0) : [];
-        const maxValue = numericValues.length > 0 ? Math.max(...numericValues) : 0;
-
-        destroyChart(chartRefKey);
-        charts[chartRefKey] = new Chart(canvasEl, {
-            type: chartType,
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: chartLabel,
-                    data: numericValues,
-                    backgroundColor: colors,
-                    borderColor: Array.isArray(colors) ? '#ffffff' : colors,
-                    borderWidth: 2,
-                    tension: 0.3,
-                    fill: chartType === 'line',
-                    pointRadius: chartType === 'line' ? 3 : 0,
-                    pointHoverRadius: chartType === 'line' ? 5 : 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                aspectRatio: (chartType === 'doughnut' || chartType === 'pie') ? 1.8 : 2.2,
-                plugins: {
-                    legend: {
-                        display: chartType !== 'bar'
-                    }
-                },
-                scales: (chartType === 'line' || chartType === 'bar') ? {
-                    y: {
-                        beginAtZero: true,
-                        suggestedMax: maxValue > 0 ? maxValue * 1.2 : 10
-                    }
-                } : undefined
-            }
-        });
-    }
-
     function setText(el, text) {
         if (el) el.textContent = text;
-    }
-
-    function renderAnalytics(data) {
-        const summary = data.summary || {};
-        const chartData = data.charts || {};
-
-        setText(summaryUsers, String(summary.users || 0));
-        setText(summaryProducts, String(summary.products || 0));
-        setText(summaryOrders, String(summary.orders || 0));
-        setText(summaryRevenue, currencyFormat.format(Number(summary.totalRevenue || 0)));
-
-        if (analyticsDbBadge) {
-            analyticsDbBadge.textContent = data.database ? ('DB: ' + data.database) : 'DB: unknown';
-        }
-
-        const warnings = Array.isArray(data.warnings) ? data.warnings.filter(Boolean) : [];
-        if (analyticsWarning) {
-            if (warnings.length > 0) {
-                analyticsWarning.classList.remove('hidden');
-                analyticsWarning.textContent = warnings.join(' ');
-            } else {
-                analyticsWarning.classList.add('hidden');
-                analyticsWarning.textContent = '';
-            }
-        }
-
-        renderAnalyticsChart(
-            monthlyRevenueCanvas,
-            'monthlyRevenue',
-            'line',
-            (chartData.monthlyRevenue && chartData.monthlyRevenue.labels) || [],
-            (chartData.monthlyRevenue && chartData.monthlyRevenue.values) || [],
-            'Revenue',
-            'rgba(59, 130, 246, 0.35)'
-        );
-
-        renderAnalyticsChart(
-            orderStatusCanvas,
-            'orderStatus',
-            'doughnut',
-            (chartData.orderStatus && chartData.orderStatus.labels) || [],
-            (chartData.orderStatus && chartData.orderStatus.values) || [],
-            'Orders',
-            ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
-        );
-
-        renderAnalyticsChart(
-            topCategoriesCanvas,
-            'topCategories',
-            'bar',
-            (chartData.topCategories && chartData.topCategories.labels) || [],
-            (chartData.topCategories && chartData.topCategories.values) || [],
-            'Sales',
-            '#14b8a6'
-        );
-
-        renderAnalyticsChart(
-            paymentMethodsCanvas,
-            'paymentMethods',
-            'pie',
-            (chartData.paymentMethods && chartData.paymentMethods.labels) || [],
-            (chartData.paymentMethods && chartData.paymentMethods.values) || [],
-            'Payments',
-            ['#6366f1', '#22c55e', '#f97316', '#e11d48', '#0ea5e9']
-        );
-    }
-
-    function loadAnalytics() {
-        axios.get(apiBase + '/analytics.php')
-            .then(function(response) {
-                renderAnalytics(response.data || {});
-            })
-            .catch(function(error) {
-                console.error(error);
-                if (analyticsWarning) {
-                    analyticsWarning.classList.remove('hidden');
-                    analyticsWarning.textContent = getApiErrorMessage(error, 'Unable to load analytics data.');
-                }
-                if (analyticsDbBadge) {
-                    analyticsDbBadge.textContent = 'DB: unavailable';
-                }
-            });
     }
 
     function showForm(isEdit = false, data = {}) {
@@ -298,6 +146,52 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             const id = e.target.dataset.id;
+            if (confirm('Are you sure you want to delete this product?')) {
+                axios.post(apiBase + '/delete.php', { id: id })
+                    .then(function(response) {
+                        renderProducts();
+                    })
+                    .catch(function(error) {
+                        alert(getApiErrorMessage(error, 'Error deleting product.'));
+                    });
+            }
+        }
+    });
+
+    productForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const id = productIdInput.value;
+        const name = productNameInput.value;
+        const price = priceInput.value;
+
+        if (productSchema) {
+            const validation = productSchema.safeParse({ productName: name, price: price });
+            if (!validation.success) {
+                const errors = validation.error.errors.map(err => err.message).join('\n');
+                alert(errors);
+                return;
+            }
+        }
+
+        const url = id ? (apiBase + '/update.php') : (apiBase + '/create.php');
+        const payload = { productName: name, price: price };
+        if (id) {
+            payload.id = id;
+        }
+
+        axios.post(url, payload)
+            .then(function(response) {
+                hideForm();
+                renderProducts();
+            })
+            .catch(function(error) {
+                alert(getApiErrorMessage(error, 'Error saving product.'));
+            });
+    });
+
+    renderProducts();
+});
+
             if (confirm('Are you sure you want to delete this product?')) {
                 axios.post(apiBase + '/delete.php', { id: id })
                     .then(function(response) {

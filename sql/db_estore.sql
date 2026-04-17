@@ -12,6 +12,7 @@ CREATE TABLE `products` (
   `productName` varchar(255) NOT NULL,
   `price` decimal(10,2) NOT NULL,
   `deleted_at` datetime DEFAULT NULL,
+  `is_deleted` int(11) DEFAULT 0,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

@@ -13,6 +13,20 @@ $options = [
 ];
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
+
+    $stmt = $pdo->query("SELECT COUNT(*) FROM users WHERE role = 'admin'");
+    if ($stmt->fetchColumn() == 0) {
+        $adminUser = 'admin';
+        $adminPass = password_hash('admin123', PASSWORD_DEFAULT);
+        $adminRole = 'admin';
+
+        $insertStmt = $pdo->prepare("INSERT INTO users (username, password, role) VALUES (:username, :password, :role)");
+        $insertStmt->execute([
+            'username' => $adminUser,
+            'password' => $adminPass,
+            'role' => $adminRole,
+        ]);
+    }
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
