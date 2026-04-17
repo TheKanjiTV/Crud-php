@@ -53,7 +53,7 @@ if (!is_array($data) || $data === []) {
 
 $username = trim((string)($data['username'] ?? ''));
 $passwordRaw = (string)($data['password'] ?? '');
-$role = 'user';
+$role = 'User';
 
 if ($username === '') {
 	http_response_code(422);

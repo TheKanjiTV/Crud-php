@@ -1,6 +1,7 @@
 <?php
 header('Content-Type: application/json');
 require_once '../config/database.php';
+require_once 'session.php';
 
 $raw = (string)file_get_contents('php://input');
 $contentType = (string)($_SERVER['CONTENT_TYPE'] ?? '');
@@ -60,15 +61,20 @@ if ($username === '' || $password === '') {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT * FROM users WHERE username = :username");
+$stmt = $pdo->prepare(
+    "SELECT id, username, password, role
+     FROM users
+     WHERE username = :username
+     ORDER BY id DESC
+     LIMIT 1"
+);
 $stmt->execute(['username' => $username]);
 $user = $stmt->fetch();
 
 if ($user && password_verify($password, $user['password'])) {
-    session_start();
     session_regenerate_id(true);
-    $_SESSION['user_id'] = $user['id'];
-    $_SESSION['role'] = $user['role'];
+    $_SESSION['user_id'] = (int)$user['id'];
+    $_SESSION['role'] = normalize_role($user['role'] ?? 'Guest');
     echo json_encode(['message' => 'Login successful']);
 } else {
     http_response_code(401);

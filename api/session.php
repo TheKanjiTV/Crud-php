@@ -24,6 +24,17 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+function normalize_role($role): string {
+    $normalized = strtolower(trim((string)$role));
+    if ($normalized === 'admin') {
+        return 'Admin';
+    }
+    if ($normalized === 'user') {
+        return 'User';
+    }
+    return 'Guest';
+}
+
 function check_auth($role = null) {
     if (!isset($_SESSION['user_id'])) {
         http_response_code(401);
@@ -32,16 +43,19 @@ function check_auth($role = null) {
         exit();
     }
 
+    $_SESSION['role'] = normalize_role($_SESSION['role'] ?? 'Guest');
+
     if ($role) {
         $roleRank = [
-            'guest' => 0,
-            'user'  => 1,
-            'admin' => 2,
+            'Guest' => 0,
+            'User'  => 1,
+            'Admin' => 2,
         ];
 
-        $currentRole = $_SESSION['role'] ?? 'guest';
+        $currentRole = $_SESSION['role'] ?? 'Guest';
+        $requiredRole = normalize_role($role);
         $currentRank = $roleRank[$currentRole] ?? -1;
-        $requiredRank = $roleRank[$role] ?? PHP_INT_MAX;
+        $requiredRank = $roleRank[$requiredRole] ?? PHP_INT_MAX;
 
         if ($currentRank < $requiredRank) {
             http_response_code(403);

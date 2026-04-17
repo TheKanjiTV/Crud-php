@@ -2,7 +2,7 @@
 header('Content-Type: application/json');
 
 require_once 'session.php';
-check_auth('user');
+check_auth('User');
 
 require_once '../config/database.php';
 

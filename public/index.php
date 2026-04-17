@@ -4,6 +4,15 @@ if (!isset($_SESSION['user_id'])) {
     header('Location: ../login.php');
     exit();
 }
+
+$roleRaw = (string)($_SESSION['role'] ?? 'Guest');
+$roleNormalized = ucfirst(strtolower($roleRaw));
+if (!in_array($roleNormalized, ['Admin', 'User', 'Guest'], true)) {
+    $roleNormalized = 'Guest';
+}
+$_SESSION['role'] = $roleNormalized;
+
+$isAdmin = ($roleNormalized === 'Admin');
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -13,7 +22,7 @@ if (!isset($_SESSION['user_id'])) {
     <title>Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100" data-role="<?php echo htmlspecialchars($_SESSION['role'] ?? 'guest', ENT_QUOTES, 'UTF-8'); ?>">
+<body class="bg-gray-100" data-role="<?php echo htmlspecialchars($roleNormalized, ENT_QUOTES, 'UTF-8'); ?>">
     <nav class="bg-white shadow-md">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
@@ -23,7 +32,10 @@ if (!isset($_SESSION['user_id'])) {
                     </div>
                 </div>
                 <div class="flex items-center">
-                    <span class="mr-4">Welcome, <span class="font-bold"><?php echo $_SESSION['role']; ?></span>!</span>
+                    <?php if ($isAdmin): ?>
+                        <a href="admin_users.php" class="mr-4 bg-indigo-500 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded">Manage Users</a>
+                    <?php endif; ?>
+                    <span class="mr-4">Welcome, <span class="font-bold"><?php echo htmlspecialchars($roleNormalized, ENT_QUOTES, 'UTF-8'); ?></span>!</span>
                     <a href="../logout.php" class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">Logout</a>
                 </div>
             </div>
