@@ -40,7 +40,7 @@ if (isset($_SESSION['user_id'])) {
             </div>
         </form>
         <p class="text-center text-gray-500 text-xs">
-            &copy;2024 Your Company. All rights reserved.
+            &copy;2026 Kenji Yonaha. All rights reserved.
         </p>
     </div>
 
