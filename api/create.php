@@ -54,13 +54,16 @@ try {
 
 	$productId = (int)$pdo->lastInsertId();
 
-	$audit = $pdo->prepare(
-		"INSERT INTO audit_trail (user_id, action)
-		 VALUES (:user_id, :action)"
+	// Log the creation action to the audit trail
+	$auditStmt = $pdo->prepare(
+		"INSERT INTO audit_trail (user_id, action, affected_table, details)
+		 VALUES (:user_id, :action, :affected_table, :details)"
 	);
-	$audit->execute([
+	$auditStmt->execute([
 		'user_id' => $_SESSION['user_id'],
-		'action' => 'Created product with ID ' . $productId,
+		'action' => 'CREATE',
+		'affected_table' => 'products',
+		'details' => 'Created new product with ID ' . $productId . ' (Name: ' . $productName . ')'
 	]);
 
 	http_response_code(201);

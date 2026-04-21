@@ -74,29 +74,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         'id' => $targetUserId,
                     ]);
 
-                    $ipAddress = (string)($_SERVER['REMOTE_ADDR'] ?? '');
-                    if (strlen($ipAddress) > 45) {
-                        $ipAddress = substr($ipAddress, 0, 45);
-                    }
-
-                    $action = sprintf(
-                        'Changed role of user %s from %s to %s',
-                        (string)$targetUser['username'],
-                        $oldRole,
-                        $newRole
-                    );
-
                     $insertAudit = $pdo->prepare(
-                        "INSERT INTO audit_trail (user_id, changed_user_id, old_role, new_role, ip_address, action)
-                         VALUES (:user_id, :changed_user_id, :old_role, :new_role, :ip_address, :action)"
+                        "INSERT INTO audit_trail (user_id, action, affected_table, details, changed_user_id, old_role, new_role)
+                         VALUES (:user_id, :action, :affected_table, :details, :changed_user_id, :old_role, :new_role)"
                     );
                     $insertAudit->execute([
                         'user_id' => (int)$_SESSION['user_id'],
+                        'action' => 'UPDATE',
+                        'affected_table' => 'users',
+                        'details' => sprintf(
+                            'Updated role of %s from %s to %s',
+                            (string)$targetUser['username'],
+                            $oldRole,
+                            $newRole
+                        ),
                         'changed_user_id' => $targetUserId,
                         'old_role' => $oldRole,
                         'new_role' => $newRole,
-                        'ip_address' => $ipAddress,
-                        'action' => $action,
                     ]);
 
                     if ((int)$targetUserId === (int)$_SESSION['user_id']) {

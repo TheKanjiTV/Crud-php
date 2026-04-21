@@ -47,9 +47,19 @@ $isAdmin = ($roleNormalized === 'Admin');
             <button id="create-btn" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">Create Product</button>
         </div>
 
+        <h2 class="text-2xl font-bold mb-4">Products</h2>
         <div id="app" class="bg-white shadow-md rounded my-6">
             <!-- Product management will be rendered here -->
         </div>
+
+        <?php if ($isAdmin): ?>
+        <div class="container mx-auto mt-8">
+            <h2 class="text-2xl font-bold mb-4">Audit Trail</h2>
+            <div id="audit-trail-container" class="bg-white shadow-md rounded my-6">
+                <!-- Audit Trail will be rendered here -->
+            </div>
+        </div>
+        <?php endif; ?>
 
         <div id="form-container" style="display: none;" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -74,6 +84,6 @@ $isAdmin = ($roleNormalized === 'Admin');
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <script src="js/app.js?v=20260410"></script>
+    <script src="js/app.js?v=20260421"></script>
 </body>
 </html>

@@ -127,6 +127,15 @@ function ensure_audit_role_columns(PDO $pdo, string $schema): void {
     if (!column_exists($pdo, $schema, 'audit_trail', 'ip_address')) {
         $pdo->exec("ALTER TABLE audit_trail ADD COLUMN ip_address VARCHAR(45) DEFAULT NULL AFTER new_role");
     }
+
+    // Backward-compatible columns used by current API endpoints.
+    if (!column_exists($pdo, $schema, 'audit_trail', 'affected_table')) {
+        $pdo->exec("ALTER TABLE audit_trail ADD COLUMN affected_table VARCHAR(255) DEFAULT NULL AFTER action");
+    }
+
+    if (!column_exists($pdo, $schema, 'audit_trail', 'details')) {
+        $pdo->exec("ALTER TABLE audit_trail ADD COLUMN details TEXT DEFAULT NULL AFTER affected_table");
+    }
 }
 
 try {

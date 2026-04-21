@@ -73,12 +73,14 @@ try {
 	]);
 
 	$audit = $pdo->prepare(
-		"INSERT INTO audit_trail (user_id, action)
-		 VALUES (:user_id, :action)"
+		"INSERT INTO audit_trail (user_id, action, affected_table, details)
+		 VALUES (:user_id, :action, :affected_table, :details)"
 	);
 	$audit->execute([
 		'user_id' => $_SESSION['user_id'],
-		'action' => 'Updated product with ID ' . $id,
+		'action' => 'UPDATE',
+		'affected_table' => 'products',
+		'details' => 'Updated product ID #' . $id . ' (Name: ' . $productName . ', Price: ' . $price . ')',
 	]);
 
 	echo json_encode(['message' => 'Product updated successfully']);

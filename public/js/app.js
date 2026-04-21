@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let productsById = new Map();
 
     const app = document.getElementById('app');
+    const auditTrailContainer = document.getElementById('audit-trail-container');
     const formContainer = document.getElementById('form-container');
     const productForm = document.getElementById('product-form');
     const formTitle = document.getElementById('form-title');
@@ -37,6 +38,28 @@ document.addEventListener('DOMContentLoaded', function() {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    function formatAuditAction(log) {
+        const action = String(log.action ?? '').trim().toUpperCase();
+        if (action === 'CREATE') return 'Created';
+        if (action === 'UPDATE') return 'Updated';
+        if (action === 'DELETE') return 'Deleted';
+        if (action === 'UPDATE_ROLE') return 'Updated Role';
+
+        const details = String(log.details ?? '').toLowerCase();
+        if (details.includes('deleted user')) return 'Deleted User';
+        if (details.includes('role')) return 'Updated Role';
+
+        return action || 'Updated';
+    }
+
+    function formatAuditDateTime(value) {
+        const d = new Date(value);
+        if (Number.isNaN(d.getTime())) {
+            return escapeHtml(value);
+        }
+        return escapeHtml(d.toLocaleString());
     }
 
     function showForm(isEdit, data) {
@@ -111,6 +134,66 @@ document.addEventListener('DOMContentLoaded', function() {
             });
     }
 
+    function renderAuditTrail() {
+        if (!auditTrailContainer || userRole !== 'admin') {
+            return;
+        }
+
+        axios.get(apiBase + '/audit_trail.php')
+            .then(function(response) {
+                const logs = Array.isArray(response.data) ? response.data : [];
+
+                const filteredLogs = logs.filter(function(log) {
+                    const txt = (
+                        String(log.action ?? '') + ' ' +
+                        String(log.details ?? '') + ' ' +
+                        String(log.affected_table ?? '')
+                    ).toLowerCase();
+
+                    return txt.includes('create') || txt.includes('update') || txt.includes('delete') || txt.includes('role');
+                });
+
+                let html = '<table class="min-w-full table-auto">';
+                html += '<thead><tr class="bg-gray-800">';
+                html += '<th class="px-6 py-2"><span class="text-gray-300">User Role</span></th>';
+                html += '<th class="px-6 py-2"><span class="text-gray-300">Username</span></th>';
+                html += '<th class="px-6 py-2"><span class="text-gray-300">Action</span></th>';
+                html += '<th class="px-6 py-2"><span class="text-gray-300">Details</span></th>';
+                html += '<th class="px-6 py-2"><span class="text-gray-300">Date & Time</span></th>';
+                html += '</tr></thead>';
+                html += '<tbody class="bg-gray-200">';
+
+                if (filteredLogs.length === 0) {
+                    html += '<tr class="bg-white border-4 border-gray-200 text-center">';
+                    html += '<td colspan="5" class="px-6 py-4">No audit trail records found yet.</td>';
+                    html += '</tr>';
+                } else {
+                    filteredLogs.forEach(function(log) {
+                        html += '<tr class="bg-white border-4 border-gray-200 text-center">';
+                        html += '<td class="px-6 py-2">' + escapeHtml(log.user_role) + '</td>';
+                        html += '<td class="px-6 py-2">' + escapeHtml(log.username) + '</td>';
+                        html += '<td class="px-6 py-2">' + escapeHtml(formatAuditAction(log)) + '</td>';
+                        html += '<td class="px-6 py-2">' + escapeHtml(log.details) + '</td>';
+                        html += '<td class="px-6 py-2">' + formatAuditDateTime(log.date_time) + '</td>';
+                        html += '</tr>';
+                    });
+                }
+
+                html += '</tbody></table>';
+                auditTrailContainer.innerHTML = html;
+            })
+            .catch(function(error) {
+                console.error('Audit Trail Error:', error);
+                const message = getApiErrorMessage(error, 'Unable to load audit trail.');
+                auditTrailContainer.innerHTML = '<div class="p-4 text-red-600">' + escapeHtml(message) + '</div>';
+            });
+    }
+
+    function refreshAllData() {
+        renderProducts();
+        renderAuditTrail();
+    }
+
     if (createBtn) {
         if (!canCreate) {
             createBtn.disabled = true;
@@ -168,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 axios.post(apiBase + '/delete.php', { id: id })
                     .then(function() {
-                        renderProducts();
+                        refreshAllData();
                     })
                     .catch(function(error) {
                         alert(getApiErrorMessage(error, 'Error deleting product.'));
@@ -214,7 +297,7 @@ document.addEventListener('DOMContentLoaded', function() {
             axios.post(url, payload)
                 .then(function() {
                     hideForm();
-                    renderProducts();
+                    refreshAllData();
                 })
                 .catch(function(error) {
                     alert(getApiErrorMessage(error, 'Error saving product.'));
@@ -222,5 +305,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    renderProducts();
+    refreshAllData();
 });

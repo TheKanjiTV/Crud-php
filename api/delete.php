@@ -24,30 +24,46 @@ if ($id === false) {
 }
 
 try {
+	$pdo->beginTransaction();
+
+	// Get product name for audit log
+	$nameStmt = $pdo->prepare("SELECT productName FROM products WHERE id = :id");
+	$nameStmt->execute(['id' => $id]);
+	$product = $nameStmt->fetch(PDO::FETCH_ASSOC);
+	$productName = $product ? $product['productName'] : 'N/A';
+
 	$stmt = $pdo->prepare(
 		"UPDATE products
-		 SET is_deleted = 1
+		 SET is_deleted = 1, deleted_at = NOW()
 		 WHERE id = :id AND is_deleted = 0"
 	);
 	$stmt->execute(['id' => $id]);
 
 	if ($stmt->rowCount() === 0) {
+		$pdo->rollBack();
 		http_response_code(404);
 		echo json_encode(['message' => 'Product not found or already deleted.']);
 		exit;
 	}
 
 	$audit = $pdo->prepare(
-		"INSERT INTO audit_trail (user_id, action)
-		 VALUES (:user_id, :action)"
+		"INSERT INTO audit_trail (user_id, action, affected_table, details)
+		 VALUES (:user_id, :action, :affected_table, :details)"
 	);
 	$audit->execute([
 		'user_id' => $_SESSION['user_id'],
-		'action' => 'Soft deleted product with ID ' . $id,
+		'action' => 'DELETE',
+		'affected_table' => 'products',
+		'details' => "Soft-deleted product ID #{$id} ({$productName})",
 	]);
+
+	$pdo->commit();
 
 	echo json_encode(['message' => 'Product soft deleted successfully']);
 } catch (PDOException $e) {
+	if ($pdo->inTransaction()) {
+		$pdo->rollBack();
+	}
 	http_response_code(500);
-	echo json_encode(['message' => 'Database error while deleting product.']);
+	echo json_encode(['message' => 'Database error while deleting product.', 'error' => $e->getMessage()]);
 }
